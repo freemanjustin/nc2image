@@ -26,7 +26,7 @@ COBJ=	$(CSRC)main.o \
 
 OBJ=	$(COBJ) 
 
-EXEC=	./bin/nc2png
+EXEC=	./bin/nc2image
 
 $(EXEC):$(OBJ)
 	$(CC) $(CFLAGS) -o $(EXEC) $(OBJ) $(LFLAGS)

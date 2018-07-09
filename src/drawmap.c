@@ -18,9 +18,9 @@ void draw_map(e *E, colormap cm, bounding_box box){
 
   for(j=0;j<E->height;j++){ // row
 
-    y2lat = E->latDelta * ( (float)j/(float)E->height);
-    //printf("j = %d, latDelta = %f, y2lat = %f\n", j, E->latDelta,  y2lat);
+    y2lat = E->latDelta * ( ((float)j+1.0)/((float)E->height)) ;
     ylut[j] = find_closest(E->lat, y2lat, box.lat_start, box.lat_end);
+
     //printf("\tylut[%d] = %d\n", j, ylut[j]);
   /*
     //pixel2geo(E, &y2lat, &x2lon, j, 0);
@@ -37,41 +37,23 @@ void draw_map(e *E, colormap cm, bounding_box box){
   }
 
   for(i=0;i<E->width;i++){  // col
-    x2lon = E->lonDelta * ( (float)i/(float)E->width);
+    x2lon = E->lonDelta * ( ((float)i+1.0)/((float)E->width));
     xlut[i] = find_closest(E->lon, x2lon, box.lon_start, box.lon_end);
-    /*
-    //pixel2geo(E, &y2lat, &x2lon, 0, i);
-    // map this pixel to be in the x range of the data
-    x2lon = i;//(float)i/(float)E->lonDelta;
-    if( (x2lon < E->lon[0]) || (x2lon > E->lon[E->nlon-1]) ){
-      // this pixel is outside of data range
-      // mark it to make transparent later
-      xlut[i] = OUTSIDE;
-    }
-    else{
-      // x2lon is the longitude of our map projected pixel
-      // xlut[i] is the location of this point in our data array
-
-      xlut[i] = find_closest(E->lon, x2lon, box.lon_start, box.lon_end);
-      
-    }
-    */
-
   }
 
 
   for(j=0;j<E->height;j++){ // row
     for(i=0;i<E->width;i++){  // col
 
-        if( (ylut[j] != OUTSIDE) && (xlut[i] != OUTSIDE) && (E->field[ylut[j]][xlut[i]] > -999.0) ){
-          //printf("ylut[%d] = %d, xlut[%d] = %d\n",j,ylut[j],i,xlut[i]);
+        //if( (ylut[j] != OUTSIDE) && (xlut[i] != OUTSIDE) && (E->field[ylut[j]][xlut[i]] > -999.0) ){
+        //printf("ylut[%d] = %d, xlut[%d] = %d\n",j,ylut[j],i,xlut[i]);
           apply_colormap(E, E->cmap, E->field[ylut[j]][xlut[i]], E->min_val, E->max_val );
 
           E->image[ ((E->height-j-1) * E->width  + i) * 4 + 0] = (int)E->r;//(int)get_red(E->field[0][(E->nlat-1)-j][i], E->min_val, E->max_val);
           E->image[ ((E->height-j-1) * E->width  + i) * 4 + 1] = (int)E->g;//(int)get_red(E->field[0][(E->nlat-1)-j][i], E->min_val, E->max_val);
           E->image[ ((E->height-j-1) * E->width  + i) * 4 + 2] = (int)E->b;//(int)get_red(E->field[0][(E->nlat-1)-j][i], E->min_val, E->max_val);
           E->image[ ((E->height-j-1) * E->width  + i) * 4 + 3] = 255;
-        }
+        //}
 
 
           /*

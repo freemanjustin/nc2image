@@ -52,24 +52,9 @@ void read_data(e *E){
     nc_inq_varid(ncid, E->lon_name, &varid);
     nc_get_var_float(ncid, varid, &E->lon[0]);
 
-		/*
-		// check the bounds on the longitude array
-		// and set the do_shiftgrid flag as appropriate
-		if( (E->lon[0] < 0.0) )
-			// our input data is already in the -180.0 to 180.0 longitude range
-			// nothing to do
-			E->do_shiftgrid = FALSE;
-		else{
-			// our input data is in the 0 to 360 longitude range
-			E->do_shiftgrid = TRUE;
-		}
-			printf("data lon_min = %f, lon_max = %f\n", E->lon[0], E->lon[E->nlon-1]);
-			printf("do_shiftgrid is %d\n", E->do_shiftgrid);
-		*/
-
     nc_inq_varid(ncid, E->field_name, &varid);
 
-		// see if there is a scale and offset value for this data
+	// see if there is a scale and offset value for this data
 
 
     //cout << " getting field: " << field_name.c_str() << endl;
@@ -125,6 +110,40 @@ void read_data(e *E){
 			}
 		}
 
-		//printf("min_val = %f\nmax_val = %f\n", E->min_val, E->max_val);
+		//printf("pre: min_val = %f\nmax_val = %f\n", E->min_val, E->max_val);
+
+		/*
+		// normalize field to be between zero and one
+		for(i=0;i<E->nlat;i++){
+			for(j=0;j<E->nlon;j++){
+		 		E->field[i][j] = (E->field[i][j] - E->min_val)/(E->max_val - E->min_val);
+			}
+		}
+
+		E->min_val = 999.0;
+		E->max_val = -999.0;
+		for(i=0;i<E->nlat;i++){
+			for(j=0;j<E->nlon;j++){
+
+				if(E->field[i][j] > -999.0){
+					if(E->field[i][j] < E->min_val)
+						E->min_val = E->field[i][j];
+
+					if(E->field[i][j] > E->max_val)
+						E->max_val = E->field[i][j];
+				}
+			}
+		}
+		*/
+		//printf("post: min_val = %f\nmax_val = %f\n", E->min_val, E->max_val);
+
+		// test for night time field
+		if(E->max_val == E->min_val){
+			printf("XXXX --> Data is night_time\n");
+			E->night = 1;
+		}
 		
 }
+
+
+

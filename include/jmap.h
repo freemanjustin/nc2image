@@ -152,6 +152,9 @@ typedef struct {
 
     int   do_shiftgrid;
 
+    // for the cloud classifier:
+    int night;
+
 }e;
 
 // prototypes
@@ -167,7 +170,7 @@ void pixel2geo(e *E, float *latitude, float *longitude, int y, int x) ;
 int midpoint(int low, int high);
 int binary_search(int A[], int key, int imin, int imax);
 int find_closest_int(int A[], int key, int imin, int imax);
-int find_closest(float *A, float key, int imin, int imax);
+int find_closest(float *A, float key, float imin, float imax);
 
 //colormaps
 void init_cmaps_from_data(e *E, colormap cm);

@@ -33,6 +33,7 @@ int binary_search(int A[], int key, int imin, int imax)
 
 int find_closest_int(int A[], int key, int imin, int imax)
 {
+
   // continue searching while [imin,imax] is not empty
   while (imax >= imin){
     // calculate the midpoint for roughly equal partition
@@ -56,12 +57,21 @@ int find_closest_int(int A[], int key, int imin, int imax)
 }
 
 
-int find_closest(float *A, float key, int imin, int imax)
+int find_closest(float *A, float key, float imin, float imax)
 {
+
+  int imid;
+
+  if( key <= imin)
+    return 0;
+
+  if( key >= imax)
+    return imax;
+
   // continue searching while [imin,imax] is not empty
   while (imax >= imin){
     // calculate the midpoint for roughly equal partition
-    int imid = midpoint(imin, imax);
+    imid = midpoint(imin, imax);
     if(A[imid] == key)
       // key found at index imid
       return imid;
@@ -76,6 +86,8 @@ int find_closest(float *A, float key, int imin, int imax)
   // key was not found, return closest
   if (imax <= 0) return 0;
   if (imin >= imax) return imax;
-  if ((key - A[imax]) < (A[imin] - key)) return imax;
-  return imin;
+  if ((key - A[(int)imax]) < (A[(int)imin] - key)) return (int)imax;
+  return (int)imin;
+
+  return imid;
 }

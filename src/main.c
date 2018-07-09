@@ -15,12 +15,9 @@ int main(int argc,char **argv)
     int row,col;
     int index;
 
-    
-
     bounding_box box;
 
     colormap cm;
-
 
     int   nx,ny;
     int   ii,jj;
@@ -36,9 +33,10 @@ int main(int argc,char **argv)
 	}
 	else{
 		get_command_line_arg_as_string(&E->input_file, argv[1]);
-    get_command_line_arg_as_int(&E->scale, argv[2]);
-    get_command_line_arg_as_string(&E->colormap_name, argv[3]);
-		get_command_line_arg_as_string(&E->fname, argv[4]);
+    get_command_line_arg_as_string(&E->field_name, argv[2]);
+    get_command_line_arg_as_int(&E->scale, argv[3]);
+    get_command_line_arg_as_string(&E->colormap_name, argv[4]);
+		get_command_line_arg_as_string(&E->fname, argv[5]);
 	}
 
   // figure out what colormap was requested
@@ -110,35 +108,38 @@ int main(int argc,char **argv)
   // read the netcdf data
   E->lat_name = malloc(80);
   E->lon_name = malloc(80);
-  E->field_name = malloc(80);
+  //E->field_name = malloc(80);
 
   //sprintf(E->lat_name,"yt_ocean");
   //sprintf(E->lon_name,"xt_ocean");
   //sprintf(E->field_name,"eta_t");
 
+  // sprintf(E->lat_name,"x"); // this is rows
+  // sprintf(E->lon_name,"y"); // this is cols
+  // sprintf(E->field_name,"field");
+
   sprintf(E->lat_name,"x"); // this is rows
   sprintf(E->lon_name,"y"); // this is cols
-  sprintf(E->field_name,"field");
+  //sprintf(E->field_name,"Pso");
 
+  //printf("field_name = %s\n", E->field_name);
+
+  E->night = 0; // assume not night time!
   read_data(E);
 
   //printf("done read data\n");
 
   // redo the lat and lon arrays to be integers from 1 to nlat, 1 to nlon
-  /*
+  
   for(i=0;i<E->nlat;i++)
     E->lat[i] = i+1;
   for(i=0;i<E->nlon;i++)
     E->lon[i] = i+1;
-  */
 
-    //E->width = 1500;
-    //E->height = 3600;
-
-    box.min_lat = 0;//E->lat[0];
-    box.max_lat = E->nlat;//E->lat[E->nlat-1];
-    box.min_lon = 0;//E->lon[0];
-    box.max_lon = E->nlon;//E->lon[E->nlon-1];
+    box.min_lat = E->lat[0];
+    box.max_lat = E->lat[E->nlat-1];
+    box.min_lon = E->lon[0];
+    box.max_lon = E->lon[E->nlon-1];
 
     // these are the indexes into the data array
     box.lon_start = find_closest(E->lon, box.min_lon, 0, E->nlon-1);//floor(E->lon[0]);
@@ -146,10 +147,11 @@ int main(int argc,char **argv)
     box.lat_start = find_closest(E->lat, box.min_lat, 0, E->nlat-1);//ceil(E->lat[E->nlat-1]);
     box.lat_end = find_closest(E->lat, box.max_lat, 0, E->nlat-1);//floor(E->lat[0]);
 
+
     // image dimensions
-    int scale = E->scale;  // scale factor should be dynamically calculated
-    E->width  = (box.lon_end-box.lon_start)*scale;
-    E->height = (box.lat_end-box.lat_start)*scale;
+    //int scale = E->scale;  // scale factor should be dynamically calculated
+    E->width  = (box.lon_end-box.lon_start);
+    E->height = (box.lat_end-box.lat_start);
     //printf("## width = %d, height = %d\n", E->width, E->height);
 
     // map bounds for the drawing function
@@ -204,24 +206,65 @@ int main(int argc,char **argv)
     //draw_map(E, rainbow, box);
     draw_map(E, cm, box);
 
-    stbi_write_png(E->fname, E->width, E->height, 4, (const void *)E->image, 0);
-    return 0;
+    // apply scale factor
+    float scaleFactor = E->scale;
+    int scaledImageWidth = E->width*E->scale;
+    int scaledImageHeight = E->height*E->scale;
 
-    /*
-    // resize to 256x256
-    int scaled_width = E->width;
-    int scaled_height = E->height;
+    char *scaled_image = (char *) malloc(scaledImageWidth*scaledImageHeight*4*sizeof(char));
 
-    if( (scaled_width != E->width) && (scaled_height != E->height) ){
-      char *scaled_image = (char *) malloc(scaled_width*scaled_height*4*sizeof(char));
-      stbir_resize_uint8_srgb((const void *)E->image , E->width, E->height , 0,
-                              (const void *)scaled_image, scaled_width, scaled_height, 0, 4, 3, 0);
-      stbi_write_png(E->fname, scaled_width, scaled_height, 4, (const void *)scaled_image, 0);
+    if( (scaledImageWidth != E->width) && (scaledImageHeight != E->height) ){
+    
+      for (int y=0; y < scaledImageHeight; y++){
+        for (int x=0; x < scaledImageWidth; x++) {
+
+          //int sourceImageX = (int)max(x * 1.0f / scaleFactor, (float)(E->width - 1));
+          //int sourceImageY = (int)max(y * 1.0f / scaleFactor, (float)(E->height - 1));
+
+          int sourceImageX = (int)(x * 1.0f / scaleFactor);
+          if(sourceImageX > (E->width - 1))
+            sourceImageX = (E->width - 1);
+
+          int sourceImageY = (int)(y * 1.0f / scaleFactor);
+          if(sourceImageY > (E->height - 1))
+            sourceImageY = (E->height - 1);
+          
+          // source image pixel value
+          E->r = E->image[ (sourceImageY * E->width  + sourceImageX) * 4 + 0];
+          E->g = E->image[ (sourceImageY * E->width  + sourceImageX) * 4 + 1];
+          E->b = E->image[ (sourceImageY * E->width + sourceImageX) * 4 + 2];
+
+          // set scale image pixel value
+          scaled_image[ (y * scaledImageWidth  + x) * 4 + 0] = (int)E->r;
+          scaled_image[ (y * scaledImageWidth  + x) * 4 + 1] = (int)E->g;
+          scaled_image[ (y * scaledImageWidth  + x) * 4 + 2] = (int)E->b;
+          scaled_image[ (y * scaledImageWidth  + x) * 4 + 3] = 255;
+        }
+      } 
+
+      if(E->night == 1){
+        char* fname_night;
+        fname_night = malloc(256*sizeof(char));
+        sprintf(fname_night,"night_%s", E->fname);
+        stbi_write_png(fname_night, scaledImageWidth, scaledImageHeight, 4, (const void *)scaled_image, 0);
+        free(fname_night);
+      }
+      else
+        stbi_write_png(E->fname, scaledImageWidth, scaledImageHeight, 4, (const void *)scaled_image, 0);
     }
     else{
-      // write the image
-      stbi_write_png(E->fname, E->width, E->height, 4, (const void *)E->image, 0);
+      if(E->night == 1){
+        char* fname_night;
+        fname_night = malloc(256*sizeof(char));
+        sprintf(fname_night,"night_%s", E->fname);
+        stbi_write_png(fname_night, scaledImageWidth, scaledImageHeight, 4, (const void *)scaled_image, 0);
+        free(fname_night);
+      }
+      else{
+        // write the image
+        stbi_write_png(E->fname, E->width, E->height, 4, (const void *)E->image, 0);
+      }
     }
-    */
+
 	return 0;
 }
