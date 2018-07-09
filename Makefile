@@ -8,12 +8,12 @@ CC=	gcc
 
 CSRC=	./src/
 
-CFLAGS=	-O3 -g -Wall 
+CFLAGS=	-O3
 
 INC=	-I./include \
 	-I./include/colormaps
 
-LFLAGS=	-lnetcdf 
+LFLAGS=	-lnetcdf -lm
 
 COBJ=	$(CSRC)main.o \
 	$(CSRC)netcdfIO.o \
